@@ -1,0 +1,16 @@
+.project-card {
+  background: #c0f1f3;
+  background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin: 16px;
+  max-width: 250px;
+  text-align: center;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
