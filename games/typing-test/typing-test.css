@@ -342,15 +342,24 @@ h1 {
 /* Scoreboard */
 .score-panel {
   display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   align-content: start;
   gap: 12px;
   min-height: 0;
   padding: 18px;
+  overflow: hidden;
 }
 
 .score-panel h2 {
   margin: 0;
   font-size: 1rem;
+}
+
+.score-note {
+  margin: -6px 0 0;
+  color: #5d5045;
+  font-size: 0.8rem;
+  font-weight: 800;
 }
 
 .score-card {
@@ -369,25 +378,59 @@ h1 {
   font-weight: 800;
 }
 
+#latest-detail {
+  display: grid;
+  gap: 5px;
+}
+
 .score-card strong {
   font-size: 1.7rem;
 }
 
 #leaderboard-list {
   display: grid;
-  gap: 8px;
+  align-content: start;
+  gap: 7px;
   margin: 0;
   padding: 0;
+  min-height: 0;
+  overflow: auto;
   list-style: none;
+  scrollbar-width: thin;
 }
 
 #leaderboard-list li {
   display: grid;
   gap: 2px;
-  padding: 10px 12px;
+  padding: 8px 11px;
   border: 1px solid rgb(24 19 15 / 12%);
   border-radius: 14px;
   background: rgb(255 255 255 / 46%);
+}
+
+#leaderboard-list strong {
+  font-size: 0.96rem;
+}
+
+.missed-keys {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.missed-key {
+  display: inline-grid;
+  min-width: 22px;
+  min-height: 20px;
+  place-items: center;
+  padding: 1px 6px;
+  border: 1px solid rgb(24 19 15 / 18%);
+  border-radius: 7px;
+  background: rgb(228 184 79 / 24%);
+  color: var(--ink);
+  font-family: "Courier New", ui-monospace, monospace;
 }
 
 /* Interactive keyboard */

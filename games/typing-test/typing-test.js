@@ -48,6 +48,9 @@ const LEADERBOARD_STORAGE_KEY = "typingTestLeaderboard";
 const LEADERBOARD_LIMIT = 5;
 const TIMER_TICK_MS = 1000;
 const WORD_STREAM_LENGTH = 300;
+const KEY_LABELS = {
+    " ": "space"
+};
 
 const elements = {
     startButton: document.querySelector("#start-button"),
@@ -71,6 +74,7 @@ const state = {
     testDuration: 60,
     totalTyped: 0,
     mistakes: 0,
+    missedKeys: {},
     timerId: null,
     isRunning: false
 };
@@ -100,6 +104,7 @@ function startGame(duration = 60) {
     state.testDuration = duration;
     state.totalTyped = 0;
     state.mistakes = 0;
+    state.missedKeys = {};
     state.isRunning = true;
 
     renderWords();
@@ -226,21 +231,22 @@ function submitCurrentWord() {
     renderCurrentWord();
 }
 
-// Counts the unfinished word if the timer ends while the user is still typing.
+// Counts only the typed portion of an unfinished word when time expires.
 function finalizeCurrentWord() {
     const typedWord = elements.userInput.value.trim();
     const currentWord = state.words[state.wordIndex];
 
     if (!typedWord || !currentWord) return;
 
-    submitWord(state.wordIndex, typedWord, currentWord);
+    submitWord(state.wordIndex, typedWord, currentWord, typedWord.length);
+    renderCurrentWord();
     elements.userInput.value = "";
 }
 
 // Records a word in state, updates score totals, and freezes its visual state.
-function submitWord(index, typedWord, currentWord) {
+function submitWord(index, typedWord, currentWord, scoreLength) {
     state.typedWords[index] = typedWord;
-    scoreSubmittedWord(typedWord, currentWord);
+    scoreSubmittedWord(typedWord, currentWord, scoreLength);
     renderSubmittedWord(index);
 }
 
@@ -338,16 +344,26 @@ function getLetterStatus(currentWord, typedWord, letterIndex, isCurrent) {
 }
 
 // Adds one submitted word to the running totals used for final scoring.
-function scoreSubmittedWord(typedWord, currentWord) {
-    const scoredLength = Math.max(typedWord.length, currentWord.length);
+function scoreSubmittedWord(typedWord, currentWord, scoreLength) {
+    const scoredLength = scoreLength ?? Math.max(typedWord.length, currentWord.length);
 
     state.totalTyped += scoredLength;
 
     for (let i = 0; i < scoredLength; i++) {
         if (typedWord[i] !== currentWord[i]) {
             state.mistakes++;
+            trackMissedKey(currentWord[i]);
         }
     }
+}
+
+// Counts which expected keys were missed so score history can show weak spots.
+function trackMissedKey(expectedKey) {
+    if (expectedKey === undefined) return;
+
+    const normalizedKey = expectedKey.toLowerCase();
+
+    state.missedKeys[normalizedKey] = (state.missedKeys[normalizedKey] || 0) + 1;
 }
 
 // Converts raw character counts into user-facing typing results.
@@ -364,30 +380,49 @@ function calculateResults() {
         rawWpm,
         accuracy,
         adjustedWpm,
-        duration: state.testDuration
+        duration: state.testDuration,
+        missedKeys: getTopMissedKeys(state.missedKeys)
     };
+}
+
+// Returns the top missed keys in descending order, capped for compact display.
+function getTopMissedKeys(missedKeys) {
+    return Object.entries(missedKeys)
+        .sort((firstMiss, secondMiss) => {
+            return secondMiss[1] - firstMiss[1];
+        })
+        .slice(0, 3)
+        .map(([key, count]) => {
+            return { key, count };
+        });
 }
 
 // Shows the most recent completed run in the score panel.
 function renderScoreSummary(results) {
+    const latestDetailText = `${results.accuracy}% accuracy | raw ${results.rawWpm}`;
+
     elements.latestScore.textContent = `${results.adjustedWpm} WPM`;
-    elements.latestDetail.textContent =
-        `${results.accuracy}% accuracy | ${results.duration}s test | raw ${results.rawWpm}`;
+    elements.latestDetail.replaceChildren(latestDetailText);
+
+    if (results.missedKeys.length > 0) {
+        elements.latestDetail.append(createMissedKeysElement(results.missedKeys));
+    }
 }
 
-// Saves a compact local leaderboard so scores survive page refreshes.
+// Saves the best local scores and drops the lowest entry when the board is full.
 function saveScore(results) {
     const scores = getSavedScores();
 
     scores.push({
         adjustedWpm: results.adjustedWpm,
+        rawWpm: results.rawWpm,
         accuracy: results.accuracy,
-        duration: results.duration
+        duration: results.duration,
+        missedKeys: results.missedKeys,
+        createdAt: Date.now()
     });
 
-    scores.sort((firstScore, secondScore) => {
-        return secondScore.adjustedWpm - firstScore.adjustedWpm;
-    });
+    scores.sort(compareScores);
 
     localStorage.setItem(
         LEADERBOARD_STORAGE_KEY,
@@ -398,10 +433,33 @@ function saveScore(results) {
 // Reads leaderboard data defensively in case localStorage has invalid data.
 function getSavedScores() {
     try {
-        return JSON.parse(localStorage.getItem(LEADERBOARD_STORAGE_KEY)) || [];
+        const savedScores = JSON.parse(localStorage.getItem(LEADERBOARD_STORAGE_KEY)) || [];
+
+        return savedScores.map(normalizeSavedScore).sort(compareScores);
     } catch {
         return [];
     }
+}
+
+// Keeps older saved scores compatible after leaderboard fields change.
+function normalizeSavedScore(score) {
+    return {
+        adjustedWpm: score.adjustedWpm,
+        rawWpm: score.rawWpm || score.adjustedWpm,
+        accuracy: score.accuracy,
+        duration: score.duration,
+        missedKeys: score.missedKeys || [],
+        createdAt: score.createdAt || 0
+    };
+}
+
+// Ranks higher WPM first, then prefers newer games when scores tie.
+function compareScores(firstScore, secondScore) {
+    if (secondScore.adjustedWpm !== firstScore.adjustedWpm) {
+        return secondScore.adjustedWpm - firstScore.adjustedWpm;
+    }
+
+    return secondScore.createdAt - firstScore.createdAt;
 }
 
 // Renders saved scores into the side panel.
@@ -421,10 +479,48 @@ function renderLeaderboard() {
     scores.forEach((score) => {
         const scoreItem = document.createElement("li");
 
-        scoreItem.innerHTML = `
-            <strong>${score.adjustedWpm} WPM</strong>
-            <span>${score.accuracy}% | ${score.duration}s</span>
-        `;
+        scoreItem.append(
+            createScoreLine(`${score.adjustedWpm} WPM`, "strong"),
+            createScoreLine(`Raw ${score.rawWpm} | ${score.accuracy}% | ${score.duration}s`, "span")
+        );
+
+        if (score.missedKeys.length > 0) {
+            scoreItem.append(createMissedKeysElement(score.missedKeys));
+        }
+
         elements.leaderboardList.append(scoreItem);
     });
+}
+
+// Creates score text nodes without using HTML strings.
+function createScoreLine(text, tagName) {
+    const scoreLine = document.createElement(tagName);
+
+    scoreLine.textContent = text;
+    return scoreLine;
+}
+
+// Builds the chip row used by leaderboard entries with missed keys.
+function createMissedKeysElement(missedKeys) {
+    const missedKeysElement = document.createElement("div");
+    const missedKeysLabel = document.createElement("span");
+
+    missedKeysElement.className = "missed-keys";
+    missedKeysLabel.textContent = "Missed";
+    missedKeysElement.append(missedKeysLabel);
+
+    missedKeys.forEach((missedKey) => {
+        const keyChip = document.createElement("span");
+
+        keyChip.className = "missed-key";
+        keyChip.textContent = formatKeyLabel(missedKey.key);
+        missedKeysElement.append(keyChip);
+    });
+
+    return missedKeysElement;
+}
+
+// Keeps whitespace and punctuation readable in the missed-key display.
+function formatKeyLabel(key) {
+    return KEY_LABELS[key] || key;
 }
