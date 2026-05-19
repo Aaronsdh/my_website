@@ -3,9 +3,65 @@
 @import "./components/project-card.css";
 
 body {
-  background: #ffffff;
-  color: #000000;
+  min-height: 100vh;
+  background: #f5f7fa;
+  color: #16202a;
   font-family: Lato, Roboto, 'Open Sans', sans-serif;
   margin: 0;
   padding: 0;
+}
+
+.site-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.page-panel {
+  display: grid;
+  gap: 28px;
+  padding: 32px;
+  border: 1px solid #d9e0e7;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.home-section {
+  padding: 0;
+}
+
+.home-hero {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5eaf0;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.8rem, 8vw, 5.8rem);
+  line-height: 0.95;
+}
+
+.hero-copy {
+  max-width: 620px;
+  margin: 12px 0 0;
+  color: #53616d;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 720px) {
+  .site-shell {
+    width: min(100% - 20px, 1120px);
+    padding: 24px 0;
+  }
+
+  .page-panel {
+    padding: 20px;
+  }
 }

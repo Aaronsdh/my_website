@@ -1,4 +1,4 @@
-const p = document.querySelectorAll(".project-card");
+const p = document.querySelectorAll(".project-card[data-link]");
 
 p.forEach((card) => {
   card.addEventListener("click", () => {
