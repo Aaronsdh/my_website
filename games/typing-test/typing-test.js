@@ -2,7 +2,7 @@
 Typing Test
 
 Typing tests usually report speed as words per minute (WPM), but a "word" is
-standardized as 5 typed characters instead of a natural-language word. That
+standardized as 5 typed characters instead of a natural-language words. That
 keeps short words and long words from making the score feel random.
 
 This game is event driven:
