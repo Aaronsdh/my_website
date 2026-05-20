@@ -67,13 +67,10 @@ class AlienShip extends MovableObject {
         this.width = SHIP_SIZE;
         this.height = SHIP_SIZE;
         this.img = img;
-        this.startMovingDown();
     }
 
-    startMovingDown() {
-        this.movementTimerId = setInterval(() => {
-            this.y += ENEMY_FALL_SPEED;
-        }, 16);
+    update() {
+        this.y += ENEMY_FALL_SPEED;
     }
 }
 
@@ -139,7 +136,14 @@ function createAlienFormation(alienShipImg) {
 
 function gameLoop() {
     draw();
+    update();
     requestAnimationFrame(gameLoop);
+}
+
+function update() {
+    gameObjects.forEach(object => {
+        if (object.update) object.update();
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -157,8 +161,8 @@ function draw() {
             alienShip.img,
             alienShip.x,
             alienShip.y,
-            SHIP_SIZE,
-            SHIP_SIZE
+            alienShip.width,
+            alienShip.height
         );
     });
 }
