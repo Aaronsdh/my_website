@@ -85,7 +85,7 @@ select {
   min-height: 82px;
 }
 
-.typing-hero > div {
+.typing-hero>div {
   min-width: 0;
 }
 
@@ -224,6 +224,7 @@ select {
 }
 
 @keyframes logo-float {
+
   0%,
   100% {
     transform: translateY(0) rotate(-1deg);
@@ -235,6 +236,7 @@ select {
 }
 
 @keyframes ghost-peek {
+
   0%,
   100% {
     transform: translateY(0);
@@ -246,6 +248,7 @@ select {
 }
 
 @keyframes typewriter-nod {
+
   0%,
   100% {
     transform: translateY(0);
@@ -257,6 +260,7 @@ select {
 }
 
 @keyframes logo-blink {
+
   0%,
   47%,
   52%,
@@ -271,6 +275,7 @@ select {
 }
 
 @keyframes clip-wiggle {
+
   0%,
   100% {
     transform: rotate(13deg);
@@ -342,7 +347,7 @@ h1 {
   pointer-events: none;
 }
 
-.typing-panel > * {
+.typing-panel>* {
   position: relative;
   z-index: 1;
 }
