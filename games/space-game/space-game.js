@@ -34,6 +34,8 @@ const PROJECTILE_WIDTH = 5;
 const PROJECTILE_HEIGHT = 20;
 const ALLIANCE_FIRE_COOLDOWN = 3;
 const COOLDOWN_TICK_MS = 100;
+const STAR_COUNT = 95;
+const STARFIELD = createStarfield(STAR_COUNT);
 
 // ---------------------------------------------------------------------------
 // Global mutable state
@@ -270,12 +272,10 @@ function togglePause() {
     isPaused = !isPaused;
 
     const menu = document.getElementById('Menu');
-    
-    if (isPaused) {
-        menu.style.display = 'block';
-    } else {
-        menu.style.display = 'none';
-    }
+
+    if (!menu) return;
+
+    menu.classList.toggle('is-open', isPaused);
 }
 
 // ---------------------------------------------------------------------------
@@ -306,11 +306,45 @@ function drawScene() {
     });
 }
 
-// Paints the frame background before game objects render.
+// Paints the frame, canvas, background before game objects render.
 function clearScene() {
+    drawSpaceBackground();
+}
+
+// Draws a starfield on the canvas backdrop.
+function drawSpaceBackground() {
     ctx.clearRect(0, 0, space.width, space.height);
-    ctx.fillStyle = 'black';
+
+    const backgroundGradient = ctx.createLinearGradient(0, 0, 0, space.height);
+    backgroundGradient.addColorStop(0, '#020515');
+    backgroundGradient.addColorStop(1, '#070b26');
+
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, space.width, space.height);
+
+    STARFIELD.forEach(star => {
+        ctx.globalAlpha = star.alpha;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+    });
+
+    ctx.globalAlpha = 1;
+}
+
+// Creates fixed star positions once so the background does not shimmer randomly.
+function createStarfield(starCount) {
+    const stars = [];
+
+    for (let index = 0; index < starCount; index += 1) {
+        stars.push({
+            x: (index * 97) % space.width,
+            y: (index * 53) % space.height,
+            size: index % 7 === 0 ? 2 : 1,
+            alpha: 0.38 + ((index % 5) * 0.12)
+        });
+    }
+
+    return stars;
 }
 
 init();

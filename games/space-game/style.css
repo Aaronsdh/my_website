@@ -1,9 +1,51 @@
 #Menu {
-    display: hidden;
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-content: center;
+    justify-items: center;
+    gap: 8px;
+    z-index: 10;
+    background:
+        radial-gradient(circle at 18% 24%, rgb(255 255 255 / 76%) 0 1px, transparent 2px),
+        radial-gradient(circle at 76% 30%, rgb(255 255 255 / 62%) 0 1px, transparent 2px),
+        radial-gradient(circle at 62% 72%, rgb(255 255 255 / 54%) 0 1px, transparent 2px),
+        radial-gradient(circle at 50% 40%, rgb(56 248 255 / 16%), transparent 32%),
+        linear-gradient(180deg, rgb(3 5 18 / 92%), rgb(8 12 42 / 94%));
+    background-size: 260px 190px, 340px 250px, 300px 220px, auto, auto;
+    color: #f8fbff;
+    font-family: "Courier New", ui-monospace, monospace;
+    text-align: center;
+}
+
+#Menu.is-open {
+    display: grid;
+}
+
+#Menu h2 {
+    margin: 0;
+    color: #ff4fd8;
+    font-size: clamp(40px, 7vw, 76px);
+    line-height: 1;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow:
+        4px 4px 0 #111a3d,
+        0 0 16px #ff4fd8;
+}
+
+#Menu p {
+    margin: 0;
+    color: #38f8ff;
+    font-size: clamp(16px, 2vw, 22px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px #38f8ff;
 }
 
 #Space {
-     width: 100vw;
+    width: 100vw;
     height: 100vh;
     aspect-ratio: 1080 / 720;
     background-color: black;
