@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Space Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <canvas id="Space" width="1100" height="500" style="border: 1px solid #000000;"></canvas>
-</body>
+    <canvas id="Space" width="1080" height="720"></canvas>
+
+    <!-- Script order matters: helpers define globals used by space-game.js. -->
+    <script src="pub-sub.js"></script>
+    <script src="asset-handling.js"></script>
     <script src="space-game.js"></script>
+</body>
+
 </html>
