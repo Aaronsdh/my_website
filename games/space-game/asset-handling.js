@@ -1,12 +1,14 @@
 /*
 Asset Handling
 
-This file owns image paths and loading helpers. Keep asset paths centralized so
-future sprite swaps do not require hunting through gameplay code.
+Official design direction:
+- Keep all asset paths and image loading helpers in this file.
+- Return grouped assets from loadGameAssets() so gameplay code does not know
+  individual image paths.
 */
 
 // ---------------------------------------------------------------------------
-// Asset paths
+// Global constants
 // ---------------------------------------------------------------------------
 
 const ALLIANCE_SHIP_IMAGE_PATH = '/assets/images/alliance-ship.png';
@@ -21,6 +23,7 @@ const LASER_BEAM_IMAGE_PATH = '/assets/images/laser-beam.png';
 function loadAsset(path) {
     return new Promise((resolve, reject) => {
         const img = new Image();
+
         img.src = path;
         img.onload = () => { resolve(img); };
         img.onerror = () => { reject(new Error(`Failed to load image: ${path}`)); };
@@ -35,6 +38,7 @@ async function loadGameAssets() {
 
     return {
         allianceShip,
-        alienShip
+        alienShip,
+        laserBeam
     };
 }
