@@ -2,35 +2,48 @@
 
 @import "../../src/style.css";
 
-/* Theme tokens keep the visual style easy to adjust without hunting values. */
+/* ==========================================================================
+   Theme
+   Keep shared colors and sizing here so visual changes stay predictable.
+   ========================================================================== */
 :root {
   --ink: #18130f;
   --paper: #fff8ed;
   --paper-deep: #e8d7bf;
+  --cream: #f4eadb;
+  --cream-deep: #e5d4bd;
+  --surface: rgb(255 252 246 / 86%);
+  --surface-strong: rgb(255 255 255 / 90%);
+  --line: rgb(86 69 48 / 16%);
   --coral: #e46d5c;
   --gold: #e4b84f;
   --teal: #217c7e;
   --blue: #4f8fc7;
   --red: #db4c40;
   --muted: #8c8174;
-  --shadow: 0 18px 48px rgb(24 19 15 / 22%);
+  --shadow: 0 16px 38px rgb(86 69 48 / 16%);
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Page shell */
+/* ==========================================================================
+   Page Shell
+   The game sits on a calm cream workspace; keep this background simple.
+   ========================================================================== */
 body {
+  position: relative;
+  display: grid;
+  place-items: center;
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
   background:
-    linear-gradient(90deg, rgb(24 19 15 / 5%) 1px, transparent 1px) 0 0 / 42px 42px,
-    linear-gradient(rgb(24 19 15 / 4%) 1px, transparent 1px) 0 0 / 42px 42px,
-    linear-gradient(135deg, #f7efe2 0%, #e8cab7 36%, #9fd0bd 68%, #347277 100%);
+    radial-gradient(circle at 50% 0, rgb(255 255 255 / 62%) 0 22%, transparent 54%),
+    linear-gradient(180deg, var(--cream), var(--cream-deep));
 }
 
 button,
@@ -40,21 +53,59 @@ select {
 }
 
 .typing-shell {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 14px;
-  width: min(1180px, calc(100% - 28px));
-  height: 100vh;
+  width: min(1180px, calc(100% - 40px));
+  height: min(820px, calc(100vh - 40px));
   margin: 0 auto;
-  padding: 18px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgb(255 255 255 / 48%);
+  overflow: hidden;
 }
 
-/* Header and logo */
+/* ==========================================================================
+   Header and CSS Logo
+   The Typegeist mark is built from spans in index.html; no image asset needed.
+   ========================================================================== */
 .typing-hero {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   min-height: 82px;
+}
+
+.typing-hero > div {
+  min-width: 0;
+}
+
+.home-link {
+  margin-left: auto;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: #2b3938;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgb(26 37 45 / 12%);
+}
+
+.home-link:hover {
+  border-color: rgb(86 69 48 / 28%);
+  background: rgb(255 251 244 / 88%);
+  color: var(--teal);
 }
 
 .brand-mark {
@@ -62,9 +113,9 @@ select {
   width: 82px;
   height: 82px;
   place-items: center;
-  border: 1px solid rgb(24 19 15 / 18%);
-  border-radius: 22px;
-  background: rgb(255 248 237 / 72%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-strong);
   box-shadow: var(--shadow);
 }
 
@@ -72,6 +123,8 @@ select {
   position: relative;
   width: 58px;
   height: 58px;
+  transform-origin: 50% 80%;
+  animation: logo-float 4.8s ease-in-out infinite;
 }
 
 .logo-paper,
@@ -84,13 +137,39 @@ select {
 }
 
 .logo-paper {
-  top: 0;
-  left: 13px;
-  width: 32px;
-  height: 30px;
+  top: -1px;
+  left: 12px;
+  width: 34px;
+  height: 35px;
   border: 2px solid var(--ink);
-  border-radius: 7px;
+  border-bottom: 0;
+  border-radius: 16px 16px 10px 10px;
+  background:
+    radial-gradient(circle at 13px 16px, var(--ink) 0 2px, transparent 2.4px),
+    radial-gradient(circle at 23px 16px, var(--ink) 0 2px, transparent 2.4px),
+    linear-gradient(180deg, var(--paper), #fffdf8);
+  box-shadow: 0 5px 0 rgb(255 248 237 / 82%);
+  transform-origin: 50% 100%;
+  animation: ghost-peek 3.8s ease-in-out infinite;
+}
+
+.logo-paper::before,
+.logo-paper::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  width: 9px;
+  height: 7px;
+  border-radius: 0 0 999px 999px;
   background: var(--paper);
+}
+
+.logo-paper::before {
+  left: 5px;
+}
+
+.logo-paper::after {
+  right: 5px;
 }
 
 .logo-body {
@@ -100,15 +179,19 @@ select {
   height: 31px;
   border: 2px solid var(--ink);
   border-radius: 14px 14px 10px 10px;
-  background: linear-gradient(135deg, var(--teal), var(--blue));
+  background:
+    linear-gradient(90deg, transparent 0 8px, rgb(255 255 255 / 26%) 8px 11px, transparent 11px 100%),
+    linear-gradient(135deg, var(--teal), var(--blue));
+  animation: typewriter-nod 4.8s ease-in-out infinite;
 }
 
 .logo-eye {
-  top: 30px;
-  width: 6px;
-  height: 6px;
+  top: 31px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--paper);
+  animation: logo-blink 5.4s ease-in-out infinite;
 }
 
 .logo-eye-left {
@@ -120,9 +203,9 @@ select {
 }
 
 .logo-smile {
-  top: 40px;
-  left: 25px;
-  width: 10px;
+  top: 39px;
+  left: 24px;
+  width: 12px;
   height: 5px;
   border-bottom: 2px solid var(--paper);
   border-radius: 0 0 10px 10px;
@@ -137,6 +220,65 @@ select {
   border-left-width: 2px;
   border-radius: 999px;
   transform: rotate(13deg);
+  animation: clip-wiggle 4.8s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+
+@keyframes ghost-peek {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes typewriter-nod {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes logo-blink {
+  0%,
+  47%,
+  52%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  49%,
+  50% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes clip-wiggle {
+  0%,
+  100% {
+    transform: rotate(13deg);
+  }
+
+  50% {
+    transform: rotate(20deg) translateY(-1px);
+  }
 }
 
 h1 {
@@ -154,8 +296,13 @@ h1 {
   font-weight: 800;
 }
 
-/* Dashboard layout */
+/* ==========================================================================
+   Layout
+   App grid owns the large regions: typing panel, scoreboard, keyboard.
+   ========================================================================== */
 .app-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -163,13 +310,16 @@ h1 {
   min-height: 0;
 }
 
-/* Main typing surface */
+/* ==========================================================================
+   Panels
+   Shared panel chrome stays here; panel-specific behavior follows below.
+   ========================================================================== */
 .typing-panel,
 .score-panel,
 .keyboard {
-  border: 1px solid rgb(24 19 15 / 18%);
-  border-radius: 22px;
-  background: rgb(255 248 237 / 76%);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-strong);
   box-shadow: var(--shadow);
 }
 
@@ -180,17 +330,15 @@ h1 {
   min-height: 0;
   overflow: hidden;
   padding: 20px;
-  background:
-    linear-gradient(120deg, rgb(255 255 255 / 78%), rgb(245 240 232 / 86%)),
-    repeating-linear-gradient(0deg, transparent 0 29px, rgb(24 19 15 / 5%) 30px);
+  background: linear-gradient(180deg, rgb(255 255 255 / 92%), rgb(255 251 244 / 86%));
 }
 
 .typing-panel::before {
   content: "";
   position: absolute;
-  inset: 12px;
-  border: 1px dashed rgb(24 19 15 / 16%);
-  border-radius: 18px;
+  inset: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   pointer-events: none;
 }
 
@@ -199,7 +347,10 @@ h1 {
   z-index: 1;
 }
 
-/* Live stats */
+/* ==========================================================================
+   Live Stats
+   Timer and status share the same pill treatment.
+   ========================================================================== */
 .meter-row {
   display: flex;
   align-items: center;
@@ -213,8 +364,8 @@ h1 {
   min-height: 38px;
   margin: 0;
   padding: 9px 13px;
-  border: 1px solid rgb(24 19 15 / 16%);
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   background: rgb(255 255 255 / 62%);
   color: #3d352e;
   font-size: 0.9rem;
@@ -227,16 +378,23 @@ h1 {
   color: var(--teal);
 }
 
-/* Quote text and per-character states */
+/* ==========================================================================
+   Quote Viewport
+   JS scrolls #quote so the active word stays in the readable center band.
+   ========================================================================== */
 #quote {
   min-height: 0;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
   color: #3d352e;
   font-family: "Courier New", ui-monospace, monospace;
   font-size: clamp(1rem, 2vw, 1.4rem);
   font-weight: 700;
   line-height: 1.7;
+  mask-image: linear-gradient(180deg, transparent 0, #000 11%, #000 84%, transparent 100%);
+  padding: 14px 4px 22px;
 }
 
 .word {
@@ -273,7 +431,10 @@ h1 {
   color: var(--muted);
 }
 
-/* Controls */
+/* ==========================================================================
+   Test Controls
+   The grid keeps input, duration, and start button aligned as one control row.
+   ========================================================================== */
 #game-controls {
   display: grid;
   grid-template-columns: minmax(190px, 1fr) auto auto;
@@ -281,14 +442,14 @@ h1 {
   align-items: center;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgb(24 19 15 / 14%);
+  border-top: 1px solid var(--line);
 }
 
 #game-controls input,
 #game-controls select,
 #game-controls button {
   height: 44px;
-  border-radius: 16px;
+  border-radius: 8px;
   font-size: 0.95rem;
 }
 
@@ -296,8 +457,8 @@ h1 {
   width: 100%;
   min-width: 0;
   padding: 0 14px;
-  border: 1px solid rgb(24 19 15 / 22%);
-  background: #fffaf2;
+  border: 1px solid var(--line);
+  background: #fff;
   color: var(--ink);
   box-shadow: inset 0 2px 0 rgb(24 19 15 / 7%);
 }
@@ -314,32 +475,35 @@ h1 {
 
 #test-duration {
   padding: 0 34px 0 12px;
-  border: 1px solid rgb(24 19 15 / 22%);
-  background: #fffaf2;
+  border: 1px solid var(--line);
+  background: #fff;
   color: #362f28;
 }
 
 #start-button {
+  min-width: 112px;
   padding: 0 18px;
-  border: 1px solid rgb(24 19 15 / 22%);
-  background: linear-gradient(135deg, var(--teal), var(--blue));
-  color: #fff9ef;
-  font-weight: 900;
+  border: 1px solid #155f96;
+  background: linear-gradient(180deg, #2f8fd2, #2174b4);
+  color: #fff;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 7px 0 #1b5658;
-  transform: translateY(-3px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 18%);
 }
 
 #start-button:hover {
-  background: linear-gradient(135deg, var(--blue), var(--coral));
+  background: linear-gradient(180deg, #3a9fe2, #287fbe);
 }
 
 #start-button:active {
-  box-shadow: 0 3px 0 #1b5658;
-  transform: translateY(1px);
+  background: linear-gradient(180deg, #1f6f9f, #2b87c8);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 18%);
 }
 
-/* Scoreboard */
+/* ==========================================================================
+   Scoreboard
+   Scores are normalized in JS, then rendered here as compact list rows.
+   ========================================================================== */
 .score-panel {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
@@ -366,7 +530,7 @@ h1 {
   display: grid;
   gap: 4px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: linear-gradient(135deg, rgb(228 184 79 / 30%), rgb(79 143 199 / 20%));
 }
 
@@ -403,9 +567,9 @@ h1 {
   display: grid;
   gap: 2px;
   padding: 8px 11px;
-  border: 1px solid rgb(24 19 15 / 12%);
-  border-radius: 14px;
-  background: rgb(255 255 255 / 46%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 58%);
 }
 
 #leaderboard-list strong {
@@ -426,14 +590,17 @@ h1 {
   min-height: 20px;
   place-items: center;
   padding: 1px 6px;
-  border: 1px solid rgb(24 19 15 / 18%);
+  border: 1px solid var(--line);
   border-radius: 7px;
   background: rgb(228 184 79 / 24%);
   color: var(--ink);
   font-family: "Courier New", ui-monospace, monospace;
 }
 
-/* Interactive keyboard */
+/* ==========================================================================
+   Interactive Keyboard
+   Keys mirror physical keydown/keyup state from typing-test.js.
+   ========================================================================== */
 .keyboard {
   grid-column: 1 / -1;
   display: grid;
@@ -461,7 +628,7 @@ h1 {
   width: clamp(30px, 5vw, 52px);
   min-height: 34px;
   place-items: center;
-  border: 1px solid rgb(24 19 15 / 22%);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: linear-gradient(180deg, #fff7ea, var(--paper-deep));
   color: #66584c;
@@ -486,6 +653,10 @@ h1 {
   transform: translateY(3px);
 }
 
+/* ==========================================================================
+   Responsive Layout
+   Below 900px the scoreboard stacks under the typing panel.
+   ========================================================================== */
 @media (max-width: 900px) {
   body {
     overflow: auto;
@@ -493,7 +664,8 @@ h1 {
 
   .typing-shell {
     height: auto;
-    min-height: 100vh;
+    min-height: calc(100vh - 36px);
+    margin: 18px auto;
   }
 
   .app-grid {
@@ -508,11 +680,16 @@ h1 {
 @media (max-width: 720px) {
   .typing-shell {
     width: min(100% - 20px, 1080px);
-    padding: 14px 0;
+    padding: 12px;
   }
 
   .typing-hero {
     min-height: 68px;
+  }
+
+  .home-link {
+    margin-left: 78px;
+    padding: 8px 12px;
   }
 
   .brand-mark {
@@ -562,5 +739,23 @@ h1 {
 
   .key {
     min-height: 32px;
+  }
+}
+
+/* ==========================================================================
+   Motion Preferences
+   Keep scrolling usable and logo animation optional for reduced-motion users.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  #quote {
+    scroll-behavior: auto;
+  }
+
+  .typewriter-logo,
+  .logo-paper,
+  .logo-body,
+  .logo-eye,
+  .logo-clip {
+    animation: none;
   }
 }

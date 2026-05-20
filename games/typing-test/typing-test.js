@@ -2,7 +2,7 @@
 Typing Test
 
 Typing tests usually report speed as words per minute (WPM), but a "word" is
-standardized as 5 typed characters instead of a natural-language words. That
+standardized as 5 typed characters instead of a natural-language word. That
 keeps short words and long words from making the score feel random.
 
 This game is event driven:
@@ -15,6 +15,10 @@ This game is event driven:
    to the next word.
 6. When the timer ends, the app calculates raw WPM, accuracy, and adjusted WPM.
 */
+
+// ---------------------------------------------------------------------------
+// Content and configuration
+// ---------------------------------------------------------------------------
 
 const QUOTES = [
     "When you have eliminated the impossible, whatever remains, however improbable, must be the truth.",
@@ -48,9 +52,15 @@ const LEADERBOARD_STORAGE_KEY = "typingTestLeaderboard";
 const LEADERBOARD_LIMIT = 5;
 const TIMER_TICK_MS = 1000;
 const WORD_STREAM_LENGTH = 300;
+const WORD_REFILL_THRESHOLD = 80;
+const WORD_REFILL_BATCH_SIZE = 160;
 const KEY_LABELS = {
     " ": "space"
 };
+
+// ---------------------------------------------------------------------------
+// DOM references and mutable game state
+// ---------------------------------------------------------------------------
 
 const elements = {
     startButton: document.querySelector("#start-button"),
@@ -79,8 +89,16 @@ const state = {
     isRunning: false
 };
 
+// ---------------------------------------------------------------------------
+// App bootstrap
+// ---------------------------------------------------------------------------
+
 bindEvents();
 renderLeaderboard();
+
+// ---------------------------------------------------------------------------
+// Game lifecycle
+// ---------------------------------------------------------------------------
 
 // Connects DOM events to the game logic once the script loads.
 function bindEvents() {
@@ -112,6 +130,45 @@ function startGame(duration = 60) {
     renderCurrentWord();
     startTimer();
 }
+
+// Clears any old timer and begins counting down once per second.
+function startTimer() {
+    clearInterval(state.timerId);
+    renderTimer();
+
+    state.timerId = setInterval(() => {
+        state.timeLeft--;
+        renderTimer();
+
+        if (state.timeLeft <= 0) {
+            endGame();
+        }
+    }, TIMER_TICK_MS);
+}
+
+// Stops the test and displays the final speed and accuracy metrics.
+function endGame() {
+    if (!state.isRunning) return;
+
+    finalizeCurrentWord();
+    clearInterval(state.timerId);
+    state.timerId = null;
+    state.isRunning = false;
+    elements.userInput.disabled = true;
+
+    const results = calculateResults();
+
+    saveScore(results);
+    renderScoreSummary(results);
+    renderLeaderboard();
+
+    elements.statusMessage.textContent =
+        `Raw WPM: ${results.rawWpm} | Accuracy: ${results.accuracy}% | Adjusted WPM: ${results.adjustedWpm}`;
+}
+
+// ---------------------------------------------------------------------------
+// Typing and keyboard input
+// ---------------------------------------------------------------------------
 
 // Stores the user's current input, then submits the word when space is pressed.
 function handleTyping() {
@@ -161,15 +218,44 @@ function getKeyboardKey(key) {
     });
 }
 
+// ---------------------------------------------------------------------------
+// Word stream generation
+// ---------------------------------------------------------------------------
+
 // Builds enough words for a full timed test by combining random quotes.
 function buildWordStream() {
-    const stream = [];
+    return buildWordBatch(WORD_STREAM_LENGTH);
+}
 
-    while (stream.length < WORD_STREAM_LENGTH) {
-        stream.push(...getRandomQuote().split(" "));
+// Adds more generated text before fast typists can reach the end of the stream.
+function refillWordStreamIfNeeded() {
+    const remainingWords = state.words.length - state.wordIndex;
+
+    if (remainingWords > WORD_REFILL_THRESHOLD) return;
+
+    const newWords = buildWordBatch(WORD_REFILL_BATCH_SIZE);
+    const fragment = document.createDocumentFragment();
+
+    newWords.forEach((word) => {
+        const wordElement = createWordElement(word);
+
+        state.words.push(word);
+        state.wordElements.push(wordElement);
+        fragment.append(" ", wordElement);
+    });
+
+    elements.quote.append(fragment);
+}
+
+// Builds a word batch from random quotes without replacing the active stream.
+function buildWordBatch(targetLength) {
+    const words = [];
+
+    while (words.length < targetLength) {
+        words.push(...getRandomQuote().split(" "));
     }
 
-    return stream.slice(0, WORD_STREAM_LENGTH);
+    return words.slice(0, targetLength);
 }
 
 // Returns one quote at random from the local quote bank.
@@ -178,40 +264,9 @@ function getRandomQuote() {
     return QUOTES[randomIndex];
 }
 
-// Clears any old timer and begins counting down once per second.
-function startTimer() {
-    clearInterval(state.timerId);
-    renderTimer();
-
-    state.timerId = setInterval(() => {
-        state.timeLeft--;
-        renderTimer();
-
-        if (state.timeLeft <= 0) {
-            endGame();
-        }
-    }, TIMER_TICK_MS);
-}
-
-// Stops the test and displays the final speed and accuracy metrics.
-function endGame() {
-    if (!state.isRunning) return;
-
-    finalizeCurrentWord();
-    clearInterval(state.timerId);
-    state.timerId = null;
-    state.isRunning = false;
-    elements.userInput.disabled = true;
-
-    const results = calculateResults();
-
-    saveScore(results);
-    renderScoreSummary(results);
-    renderLeaderboard();
-
-    elements.statusMessage.textContent =
-        `Raw WPM: ${results.rawWpm} | Accuracy: ${results.accuracy}% | Adjusted WPM: ${results.adjustedWpm}`;
-}
+// ---------------------------------------------------------------------------
+// Word submission
+// ---------------------------------------------------------------------------
 
 // Scores the current word, freezes its letter colors, and advances the cursor.
 function submitCurrentWord() {
@@ -221,6 +276,7 @@ function submitCurrentWord() {
     submitWord(state.wordIndex, typedWord, currentWord);
 
     state.wordIndex++;
+    refillWordStreamIfNeeded();
     elements.userInput.value = "";
 
     if (state.wordIndex >= state.words.length) {
@@ -238,8 +294,7 @@ function finalizeCurrentWord() {
 
     if (!typedWord || !currentWord) return;
 
-    submitWord(state.wordIndex, typedWord, currentWord, typedWord.length);
-    renderCurrentWord();
+    submitPartialWord(state.wordIndex, typedWord, currentWord);
     elements.userInput.value = "";
 }
 
@@ -249,6 +304,17 @@ function submitWord(index, typedWord, currentWord, scoreLength) {
     scoreSubmittedWord(typedWord, currentWord, scoreLength);
     renderSubmittedWord(index);
 }
+
+// Scores only typed letters for a word still in progress when the timer ends.
+function submitPartialWord(index, typedWord, currentWord) {
+    state.typedWords[index] = typedWord;
+    scoreSubmittedWord(typedWord, currentWord, typedWord.length);
+    renderWord(index, typedWord, true);
+}
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
 
 // Creates the visible word and character spans from the generated word stream.
 function renderWords() {
@@ -269,6 +335,7 @@ function renderWords() {
     });
 
     elements.quote.append(fragment);
+    elements.quote.scrollTop = 0;
 }
 
 // Creates one word span and wraps each character so it can be styled separately.
@@ -302,6 +369,7 @@ function renderTimer() {
 // Renders the word the user is currently typing.
 function renderCurrentWord() {
     renderWord(state.wordIndex, state.typedWords[state.wordIndex] || "", true);
+    scrollCurrentWordIntoView();
 }
 
 // Renders a submitted word so its final correct/error states stay visible.
@@ -324,6 +392,30 @@ function renderWord(index, typedWord, isCurrent) {
     }
 }
 
+// Keeps the active word in a comfortable reading band as the text advances.
+function scrollCurrentWordIntoView() {
+    const wordElement = state.wordElements[state.wordIndex];
+
+    if (!wordElement) return;
+
+    requestAnimationFrame(() => {
+        const readingBandTop = elements.quote.clientHeight * 0.38;
+        const targetTop = Math.max(wordElement.offsetTop - readingBandTop, 0);
+
+        elements.quote.scrollTo({
+            top: targetTop,
+            behavior: getScrollBehavior()
+        });
+    });
+}
+
+// Mirrors reduced-motion preferences for JS-driven quote scrolling.
+function getScrollBehavior() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth";
+}
+
 // Decides whether one letter should look completed, incorrect, highlighted, or untouched.
 function getLetterStatus(currentWord, typedWord, letterIndex, isCurrent) {
     const typedLetter = typedWord[letterIndex];
@@ -342,6 +434,10 @@ function getLetterStatus(currentWord, typedWord, letterIndex, isCurrent) {
 
     return "";
 }
+
+// ---------------------------------------------------------------------------
+// Scoring
+// ---------------------------------------------------------------------------
 
 // Adds one submitted word to the running totals used for final scoring.
 function scoreSubmittedWord(typedWord, currentWord, scoreLength) {
@@ -396,6 +492,10 @@ function getTopMissedKeys(missedKeys) {
             return { key, count };
         });
 }
+
+// ---------------------------------------------------------------------------
+// Leaderboard rendering and persistence
+// ---------------------------------------------------------------------------
 
 // Shows the most recent completed run in the score panel.
 function renderScoreSummary(results) {
